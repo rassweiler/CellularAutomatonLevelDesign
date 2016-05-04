@@ -26,3 +26,7 @@
 *.exe
 *.out
 *.app
+
+*.suo
+LevelDesign/bin/*
+LevelDesign/obj/*

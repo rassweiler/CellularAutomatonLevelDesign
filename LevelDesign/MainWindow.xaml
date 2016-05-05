@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LevelDeign"
         mc:Ignorable="d"
-        Title="Level Generator" Height="674.453" Width="837.404">
+        Title="Level Generator" Height="754.251" Width="863.639" ResizeMode="CanMinimize">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="138*"/>
@@ -13,7 +13,7 @@
         </Grid.ColumnDefinitions>
         <Button x:Name="newLevel" Content="New Level" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="104" Height="20" Click="newLevel_OnClick"/>
         <Button x:Name="stepSimulation" Content="Step Simulation" HorizontalAlignment="Left" Margin="10,35,0,0" VerticalAlignment="Top" Width="104" Height="20" Click="stepSimulation_OnClick"/>
-        <Separator Grid.ColumnSpan="2" HorizontalAlignment="Left" Height="4" Margin="-197,322,0,0" VerticalAlignment="Top" Width="642" RenderTransformOrigin="0.5,0.5">
+        <Separator Grid.ColumnSpan="2" HorizontalAlignment="Left" Height="5" Margin="-239,360,0,0" VerticalAlignment="Top" Width="726" RenderTransformOrigin="0.5,0.5">
             <Separator.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform/>
@@ -28,8 +28,6 @@
         <Label x:Name="label" Content="Birth Limit" HorizontalAlignment="Left" Margin="10,85,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.474,0.346" Width="72" Height="23"/>
         <TextBox x:Name="deathLimitText" HorizontalAlignment="Left" Height="23" Margin="82,113,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="32" PreviewTextInput="birthLimitText_OnPreview" RenderTransformOrigin="1.111,0.696"/>
         <Label x:Name="label_Copy" Content="Death Limit" HorizontalAlignment="Left" Margin="10,113,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.474,0.346" Width="72" Height="23"/>
-        <ScrollViewer Grid.Column="1" HorizontalAlignment="Left" Height="643" VerticalAlignment="Top" Width="691">
-            <TextBlock x:Name="levelDisplay" HorizontalAlignment="Left" TextWrapping="Wrap" Text="TextBlock" VerticalAlignment="Top" Grid.Column="1" />
-        </ScrollViewer>
+        <Canvas x:Name="levelDisplay" Grid.Column="1" HorizontalAlignment="Left" Height="725" VerticalAlignment="Top" Width="715"/>
     </Grid>
 </Window>

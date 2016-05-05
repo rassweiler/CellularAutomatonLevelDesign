@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Drawing;
 
 namespace LevelDeign
 {
@@ -112,7 +113,8 @@ namespace LevelDeign
     {
         static public Level level;
         static public int birthLimit = 4;
-        static public int deathLimit = 3; 
+        static public int deathLimit = 3;
+        static int tileSize = 10;
 
         public MainWindow()
         {
@@ -132,7 +134,23 @@ namespace LevelDeign
 
         private void UpdateDisplay()
         {
-            levelDisplay.Text = level.SerialiseMap();
+            levelDisplay.Children.Clear();
+            for(int y = 0; y < level.height; ++y)
+            {
+                for(int x = 0; x < level.width; ++x)
+                {
+                    if(level.map[x,y] == 1)
+                    {
+                        Rectangle r = new Rectangle();
+                        r.Width = tileSize;
+                        r.Height = tileSize;
+                        r.Fill = new SolidColorBrush(Colors.Blue);
+                        levelDisplay.Children.Add(r);
+                        Canvas.SetTop(r, y*tileSize);
+                        Canvas.SetLeft(r, x*tileSize);
+                    }
+                }
+            }
         }
 
         private void newLevel_OnClick(object sender, RoutedEventArgs e)

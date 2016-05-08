@@ -42,25 +42,25 @@ namespace LevelDeign
                 {
                     if (column == 0)
                     {
-                        map[column, row] = 1;
+                        map[column, row] = 2;
                     }
                     else if (row == 0)
                     {
-                        map[column, row] = 1;
+                        map[column, row] = 2;
                     }
                     else if (column == width - 1)
                     {
-                        map[column, row] = 1;
+                        map[column, row] = 2;
                     }
                     else if (row == height - 1)
                     {
-                        map[column, row] = 1;
+                        map[column, row] = 2;
                     }
                     else
                     {
                         if (rand.NextDouble() < chance)
                         {
-                            map[column, row] = 1;
+                            map[column, row] = 2;
                         }
                         else
                         {
@@ -99,7 +99,7 @@ namespace LevelDeign
             {
                 for (column = 0; column < width; ++column)
                 {
-                    map[column, row] = 1;
+                    map[column, row] = 0;
                 }
             }
         }
@@ -114,21 +114,23 @@ namespace LevelDeign
         static public Level level;
         static public int birthLimit = 4;
         static public int deathLimit = 3;
-        static int tileSize = 10;
+        static public int steps = 1;
+        static public float chance = 0.45F;
+        static int tileSize = 4;
 
         public MainWindow()
         {
             InitializeComponent();
-            level = new Level(70, 70, 0.35F);
-            Point p = new Point(138, 20);
-            Size s = new Size(300, 300);
-            Size ts = new Size(20, 20);
-            Rect tile = new Rect(p, s);
-            Brush t = CreateGridBrush(tile, ts);
-            Rectangle canvas = new Rectangle();
-            canvas.Width = 300;
-            canvas.Height = 300;
-            canvas.Fill = t;
+            NewLevel();
+        }
+
+        private void NewLevel()
+        {
+            level = new Level(180, 180, chance);
+            for(int i = 0; i < steps; ++i)
+            {
+                StepSimulation();
+            }
             UpdateDisplay();
         }
 
@@ -144,10 +146,30 @@ namespace LevelDeign
                         Rectangle r = new Rectangle();
                         r.Width = tileSize;
                         r.Height = tileSize;
-                        r.Fill = new SolidColorBrush(Colors.Blue);
+                        r.Fill = new SolidColorBrush(Colors.Green);
                         levelDisplay.Children.Add(r);
                         Canvas.SetTop(r, y*tileSize);
                         Canvas.SetLeft(r, x*tileSize);
+                    }
+                    else if (level.map[x, y] == 2)
+                    {
+                        Rectangle r = new Rectangle();
+                        r.Width = tileSize;
+                        r.Height = tileSize;
+                        r.Fill = new SolidColorBrush(Colors.Gray);
+                        levelDisplay.Children.Add(r);
+                        Canvas.SetTop(r, y * tileSize);
+                        Canvas.SetLeft(r, x * tileSize);
+                    }
+                    else if (level.map[x, y] == 3)
+                    {
+                        Rectangle r = new Rectangle();
+                        r.Width = tileSize;
+                        r.Height = tileSize;
+                        r.Fill = new SolidColorBrush(Colors.Black);
+                        levelDisplay.Children.Add(r);
+                        Canvas.SetTop(r, y * tileSize);
+                        Canvas.SetLeft(r, x * tileSize);
                     }
                 }
             }
@@ -155,24 +177,29 @@ namespace LevelDeign
 
         private void newLevel_OnClick(object sender, RoutedEventArgs e)
         {
-            level = new Level(70, 70, 0.35F);
-            UpdateDisplay();
+            NewLevel();
         }
 
         private void clearMap_OnClick(object sender, RoutedEventArgs e)
         {
             level.ClearMap();
-            UpdateDisplay();
+            levelDisplay.Children.Clear();
         }
 
         private void stepSimulation_OnClick(object sender, RoutedEventArgs e)
         {
-             int[,] tempMap = new int[level.width, level.height];
+            StepSimulation();
+            UpdateDisplay();
+        }
+
+        private void StepSimulation()
+        {
+            int[,] tempMap = new int[level.width, level.height];
             for (int x = 0, y = 0; y < level.height; ++y)
             {
                 for (x = 0; x < level.width; ++x)
                 {
-                    tempMap[x, y] = 1;
+                    tempMap[x, y] = 0;
                 }
             }
             for (int column = 0, row = 0; row <= level.height - 1; row++)
@@ -181,22 +208,22 @@ namespace LevelDeign
                 {
                     int numWalls = GetAdjacentWalls(column, row);
 
-                    if (level.map[column, row] == 1)
+                    if (level.map[column, row] > 0)
                     {
-                        if(numWalls < deathLimit)
+                        if (numWalls < deathLimit)
                         {
                             tempMap[column, row] = 0;
                         }
                         else
                         {
-                            tempMap[column, row] = 1;
+                            tempMap[column, row] = 2;
                         }
                     }
                     else
                     {
                         if (numWalls > birthLimit)
                         {
-                            tempMap[column, row] = 1;
+                            tempMap[column, row] = 2;
                         }
                         else
                         {
@@ -205,36 +232,97 @@ namespace LevelDeign
                     }
                 }
             }
+            //Check for hidden and grass
+            for (int column = 0, row = 0; row <= level.height - 1; row++)
+            {
+                for (column = 0; column <= level.width - 1; column++)
+                {
+                    int numWalls = GetAdjacentWalls(column, row, tempMap);
+
+                    if (numWalls == 8)
+                    {
+                        tempMap[column, row] = 3;
+                    }
+                    else
+                    {
+                        if (GetGrass(column, row, tempMap))
+                        {
+                            tempMap[column, row] = 1;
+                        }
+                    }
+                }
+            }
             level.map = tempMap;
-            UpdateDisplay();
         }
 
-        private int GetAdjacentWalls(int x, int y)
+        private int GetAdjacentWalls(int x, int y, int[,] tmap = null)
         {
             int count = 0;
             for (int i = -1; i < 2; ++i)
             {
                 for (int j = -1; j < 2; ++j)
                 {
-                    int neighbour_x = x + i;
-                    int neighbour_y = y + j;
-                    if (i == 0 && j == 0)
+                    if (tmap == null)
                     {
+                        int neighbour_x = x + i;
+                        int neighbour_y = y + j;
+                        if (i == 0 && j == 0)
+                        {
+
+                        }
                         
+                        else if (neighbour_x < 0 || neighbour_y < 0 || neighbour_x >= level.width || neighbour_y >= level.height)
+                        {
+                            count = count + 1;
+                        }
+                        
+                        else if (level.map[neighbour_x, neighbour_y] > 0)
+                        {
+                            count = count + 1;
+                        }
                     }
-                    //In case the index we're looking at it off the edge of the map
-                    else if (neighbour_x < 0 || neighbour_y < 0 || neighbour_x >= level.width || neighbour_y >= level.height)
+                    else
                     {
-                        count = count + 1;
-                    }
-                    //Otherwise, a normal check of the neighbour
-                    else if (level.map[neighbour_x,neighbour_y] == 1)
-                    {
-                        count = count + 1;
+                        int neighbour_x = x + i;
+                        int neighbour_y = y + j;
+                        if (i == 0 && j == 0)
+                        {
+
+                        }
+                        
+                        else if (neighbour_x < 0 || neighbour_y < 0 || neighbour_x >= level.width || neighbour_y >= level.height)
+                        {
+                            count = count + 1;
+                        }
+                        
+                        else if (tmap[neighbour_x, neighbour_y] > 0)
+                        {
+                            count = count + 1;
+                        }
                     }
                 }
             }
             return count;
+        }
+
+        private bool GetGrass(int x, int y, int[,] map)
+        {
+            int neighbour_top = y - 1;
+            int neighbour_bottom = y + 1;
+
+            if (neighbour_top < 0 || neighbour_bottom < 0 || neighbour_top >= level.width || neighbour_bottom >= level.height)
+            {
+                return false;
+            }
+            
+            else if (map[x, neighbour_top] == 0 && map[x, neighbour_bottom] > 1)
+            {
+                return true;
+            }
+            else
+            {
+                return false; 
+            }
         }
 
         private void birthLimitText_OnPreview(object sender, TextCompositionEventArgs e)
@@ -247,46 +335,24 @@ namespace LevelDeign
             return Regex.IsMatch(text, "^[0-9]$");
         }
 
-        static Brush CreateGridBrush(Rect bounds, Size tileSize)
+        private void stepNumber_OnChange(object sender, TextChangedEventArgs e)
         {
-            var gridColor = Brushes.Black;
-            var gridThickness = 1.0;
-            var tileRect = new Rect(tileSize);
+            steps = Int32.Parse(stepNumber.Text);
+        }
 
-            var gridTile = new DrawingBrush
-            {
-                Stretch = Stretch.None,
-                TileMode = TileMode.Tile,
-                Viewport = tileRect,
-                ViewportUnits = BrushMappingMode.Absolute,
-                Drawing = new GeometryDrawing
-                {
-                    Pen = new Pen(gridColor, gridThickness),
-                    Geometry = new GeometryGroup
-                    {
-                        Children = new GeometryCollection
-                {
-                    new LineGeometry(tileRect.TopLeft, tileRect.BottomRight),
-                    new LineGeometry(tileRect.BottomLeft, tileRect.TopRight)
-                }
-                    }
-                }
-            };
+        private void startChance_OnChange(object sender, TextChangedEventArgs e)
+        {
+            chance = float.Parse(startChance.Text) / 100;
+        }
 
-            var offsetGrid = new DrawingBrush
-            {
-                Stretch = Stretch.None,
-                AlignmentX = AlignmentX.Left,
-                AlignmentY = AlignmentY.Top,
-                Transform = new TranslateTransform(bounds.Left, bounds.Top),
-                Drawing = new GeometryDrawing
-                {
-                    Geometry = new RectangleGeometry(new Rect(bounds.Size)),
-                    Brush = gridTile
-                }
-            };
+        private void deathLimit_OnChange(object sender, TextChangedEventArgs e)
+        {
+            deathLimit = Int32.Parse(deathLimitText.Text);
+        }
 
-            return offsetGrid;
+        private void birthLimit_OnChange(object sender, TextChangedEventArgs e)
+        {
+            birthLimit = Int32.Parse(birthLimitText.Text);
         }
     }
 }

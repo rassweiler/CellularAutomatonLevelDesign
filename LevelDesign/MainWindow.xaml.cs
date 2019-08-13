@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -202,36 +203,45 @@ namespace LevelDeign
                     tempMap[x, y] = 0;
                 }
             }
-            for (int column = 0, row = 0; row <= level.height - 1; row++)
-            {
-                for (column = 0; column <= level.width - 1; column++)
-                {
-                    int numWalls = GetAdjacentWalls(column, row);
 
-                    if (level.map[column, row] > 0)
-                    {
-                        if (numWalls < deathLimit)
-                        {
-                            tempMap[column, row] = 0;
-                        }
-                        else
-                        {
-                            tempMap[column, row] = 2;
-                        }
-                    }
-                    else
-                    {
-                        if (numWalls > birthLimit)
-                        {
-                            tempMap[column, row] = 2;
-                        }
-                        else
-                        {
-                            tempMap[column, row] = 0;
-                        }
-                    }
-                }
-            }
+            Thread thread1 = new Thread(() => StepSimulationThread(0,level.height/2,tempMap));
+            Thread thread2 = new Thread(() => StepSimulationThread(level.height / 2, level.height, tempMap));
+            thread1.Start();
+            thread2.Start();
+            thread1.Join();
+            thread2.Join();
+
+            //for (int column = 0, row = 0; row <= level.height - 1; row++)
+            //{
+            //    for (column = 0; column <= level.width - 1; column++)
+            //    {
+            //        int numWalls = GetAdjacentWalls(column, row);
+
+            //        if (level.map[column, row] > 0)
+            //        {
+            //            if (numWalls < deathLimit)
+            //            {
+            //                tempMap[column, row] = 0;
+            //            }
+            //            else
+            //            {
+            //                tempMap[column, row] = 2;
+            //            }
+            //        }
+            //        else
+            //        {
+            //            if (numWalls > birthLimit)
+            //            {
+            //                tempMap[column, row] = 2;
+            //            }
+            //            else
+            //            {
+            //                tempMap[column, row] = 0;
+            //            }
+            //        }
+            //    }
+            //}
+
             //Check for hidden and grass
             for (int column = 0, row = 0; row <= level.height - 1; row++)
             {
@@ -253,6 +263,40 @@ namespace LevelDeign
                 }
             }
             level.map = tempMap;
+        }
+
+        public void StepSimulationThread(int startRow, int endRow, int[,] tMap)
+        {
+            for (int column = 0, row = startRow; row < endRow; row++)
+            {
+                for (column = 0; column < level.width; column++)
+                {
+                    int numWalls = GetAdjacentWalls(column, row);
+
+                    if (level.map[column, row] > 0)
+                    {
+                        if (numWalls < deathLimit)
+                        {
+                            tMap[column, row] = 0;
+                        }
+                        else
+                        {
+                            tMap[column, row] = 2;
+                        }
+                    }
+                    else
+                    {
+                        if (numWalls > birthLimit)
+                        {
+                            tMap[column, row] = 2;
+                        }
+                        else
+                        {
+                            tMap[column, row] = 0;
+                        }
+                    }
+                }
+            }
         }
 
         private int GetAdjacentWalls(int x, int y, int[,] tmap = null)
@@ -337,22 +381,34 @@ namespace LevelDeign
 
         private void stepNumber_OnChange(object sender, TextChangedEventArgs e)
         {
-            steps = Int32.Parse(stepNumber.Text);
+            if (stepNumber.Text != "")
+            {
+                steps = Int32.Parse(stepNumber.Text);
+            }
         }
 
         private void startChance_OnChange(object sender, TextChangedEventArgs e)
         {
-            chance = float.Parse(startChance.Text) / 100;
+            if (startChance.Text != "")
+            {
+                chance = float.Parse(startChance.Text) / 100;
+            }
         }
 
         private void deathLimit_OnChange(object sender, TextChangedEventArgs e)
         {
-            deathLimit = Int32.Parse(deathLimitText.Text);
+            if (deathLimitText.Text != "")
+            {
+                deathLimit = Int32.Parse(deathLimitText.Text);
+            }
         }
 
         private void birthLimit_OnChange(object sender, TextChangedEventArgs e)
         {
-            birthLimit = Int32.Parse(birthLimitText.Text);
+            if (birthLimitText.Text != "")
+            {
+                birthLimit = Int32.Parse(birthLimitText.Text);
+            }
         }
     }
 }
